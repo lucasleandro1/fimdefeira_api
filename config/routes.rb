@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
-  devise_for :users
+  root to: "api/v1/home#index"
+
   namespace :api do
     namespace :v1 do
-      resource :user, only: [ :show, :update ]
+      devise_for :users
     end
   end
 end
