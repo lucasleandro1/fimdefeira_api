@@ -8,9 +8,13 @@ class Api::V1::Supermarkets::RegistrationsController < Devise::RegistrationsCont
     resource.save
     if resource.persisted?
       sign_up(resource_name, resource)
+
+      encoder = Warden::JWTAuth::UserEncoder.new
+      token, _payload = encoder.call(resource, :supermarket, nil)
       render json: {
         status: { code: 200, message: "Conta criada com sucesso." },
-        data: resource
+        data: resource,
+        token: token
       }, status: :ok
     else
       render json: {

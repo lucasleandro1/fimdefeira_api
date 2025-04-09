@@ -5,4 +5,8 @@ class Client < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_many :tickets
+
+  def jwt_subject
+    id
+  end
 end

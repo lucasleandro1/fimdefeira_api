@@ -8,4 +8,8 @@ class Supermarket < ApplicationRecord
   has_many :products
   has_many :posts
   has_many :tickets
+
+  def jwt_subject
+    id
+  end
 end
