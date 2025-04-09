@@ -57,14 +57,16 @@ module Api
 
       private
 
-      def product_params
-        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
+      def current_supermarket
+        current_resource_owner if current_resource_owner.is_a?(Supermarket)
       end
 
       def ensure_supermarket!
-        unless current_user.supermarket?
-          render json: { error: "Only supermarkets can make this action." }, status: :forbidden
-        end
+        render json: { error: "Acesso não autorizado" }, status: :unauthorized unless current_supermarket
+      end
+
+      def product_params
+        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
       end
     end
   end

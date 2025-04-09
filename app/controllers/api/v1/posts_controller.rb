@@ -5,7 +5,7 @@ module Api
       before_action :ensure_supermarket!
 
       def create
-        result = PostManager::Creator.new(current_user, post_params).call
+        result = PostManager::Creator.new(current_supermarket, post_params).call
 
         if result[:success]
           render json: result[:resource], status: :created
@@ -26,14 +26,16 @@ module Api
 
       private
 
-      def post_params
-        params.require(:post).permit(:text, :product_id)
+      def current_supermarket
+        current_resource_owner if current_resource_owner.is_a?(Supermarket)
       end
 
       def ensure_supermarket!
-        unless current_user.supermarket?
-          render json: { error: "Only supermarkets can make this action." }, status: :forbidden
-        end
+        render json: { error: "Acesso não autorizado" }, status: :unauthorized unless current_supermarket
+      end
+
+      def post_params
+        params.require(:post).permit(:text, :product_id)
       end
     end
   end
