@@ -1,9 +1,9 @@
 module ProductManager
   class Creator
-    attr_reader :user, :product_params
+    attr_reader :supermarket, :product_params
 
-    def initialize(user, product_params)
-      @user = user
+    def initialize(supermarket, product_params)
+      @supermarket = supermarket
       @product_params = product_params
     end
 
@@ -28,11 +28,11 @@ module ProductManager
     end
 
     def product_exists
-      user.products.exists?(name: product_params[:name])
+      supermarket.products.exists?(name: product_params[:name])
     end
 
     def create_product
-      product = user.products.new(product_params)
+      product = supermarket.products.new(product_params)
       if product.save
         product
       else

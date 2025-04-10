@@ -1,8 +1,8 @@
 module Api
   module V1
     class ProductsController< ApplicationController
+      skip_before_action :verify_authenticity_token
       before_action :authenticate_devise_api_token!
-      before_action :ensure_supermarket!
 
       def index
         instance_list = ProductManager::List.new.call
@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        result = ProductManager::Creator.new(current_user, product_params).call
+        result = ProductManager::Creator.new(current_supermarket, product_params).call
 
         if result[:success]
           render json: result[:resource], status: :created
@@ -57,16 +57,8 @@ module Api
 
       private
 
-      def current_supermarket
-        current_resource_owner if current_resource_owner.is_a?(Supermarket)
-      end
-
-      def ensure_supermarket!
-        render json: { error: "Acesso não autorizado" }, status: :unauthorized unless current_supermarket
-      end
-
       def product_params
-        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
+        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active, :supermarket_id)
       end
     end
   end
