@@ -1,8 +1,8 @@
 module Api
   module V1
-    class ProductsController< ApplicationController
-      skip_before_action :verify_authenticity_token
+    class ProductsController < ApplicationController
       before_action :authenticate_devise_api_token!
+      before_action :authenticate_supermarket!
 
       def index
         instance_list = ProductManager::List.new.call
@@ -58,7 +58,11 @@ module Api
       private
 
       def product_params
-        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active, :supermarket_id)
+        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
+      end
+
+      def current_supermarket
+        @current_supermarket ||= Supermarket.find_by(id: current_devise_api_user.id)
       end
     end
   end
