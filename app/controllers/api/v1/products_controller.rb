@@ -1,8 +1,8 @@
 module Api
   module V1
-    class ProductsController< ApplicationController
+    class ProductsController < ApplicationController
       before_action :authenticate_devise_api_token!
-      before_action :ensure_supermarket!
+      before_action :authenticate_supermarket!
 
       def index
         instance_list = ProductManager::List.new.call
@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        result = ProductManager::Creator.new(current_user, product_params).call
+        result = ProductManager::Creator.new(current_supermarket, product_params).call
 
         if result[:success]
           render json: result[:resource], status: :created
@@ -61,10 +61,8 @@ module Api
         params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
       end
 
-      def ensure_supermarket!
-        unless current_user.supermarket?
-          render json: { error: "Only supermarkets can make this action." }, status: :forbidden
-        end
+      def current_supermarket
+        @current_supermarket ||= Supermarket.find_by(id: current_devise_api_user.id)
       end
     end
   end

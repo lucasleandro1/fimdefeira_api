@@ -23,7 +23,7 @@ module ProductManager
     end
 
     def scope
-      Product.includes(mobile_devices: :tickets).find(product_id)
+      Product.find(product_id)
     end
   end
 end
