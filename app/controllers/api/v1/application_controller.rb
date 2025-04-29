@@ -1,8 +1,7 @@
 module Api
   module V1
     class ApplicationController < ActionController::API
-      before_action :authenticate_supermarket!
-      before_action :authenticate_client!
+      before_action :authenticate_devise_api_token!
 
       def authenticate_supermarket!
         if current_supermarket.nil?

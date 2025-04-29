@@ -5,6 +5,7 @@ root to: "api/v1/home#index"
       devise_for :supermarkets
       devise_for :clients
       resources :products
+      resources :posts
     end
   end
 end

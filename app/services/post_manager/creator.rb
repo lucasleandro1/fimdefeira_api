@@ -1,9 +1,9 @@
 module PostManager
   class Creator
-    attr_reader :user, :post_params
+    attr_reader :supermarket, :post_params
 
-    def initialize(user, post_params)
-      @user = user
+    def initialize(supermarket, post_params)
+      @supermarket = supermarket
       @post_params = post_params
     end
 
@@ -28,11 +28,11 @@ module PostManager
     end
 
     def post_exists
-      user.posts.exists?(name: post_params[:name])
+      supermarket.posts.exists?(product_id: post_params[:product_id])
     end
 
     def create_post
-      post = user.Posts.new(post_params)
+      post = supermarket.posts.new(post_params)
       if post.save
         post
       else

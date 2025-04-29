@@ -2,7 +2,7 @@ module Api
   module V1
     class PostsController < ApplicationController
       before_action :authenticate_devise_api_token!
-      before_action :ensure_supermarket!
+      before_action :authenticate_supermarket!
 
       def create
         result = PostManager::Creator.new(current_supermarket, post_params).call
@@ -27,11 +27,7 @@ module Api
       private
 
       def current_supermarket
-        current_resource_owner if current_resource_owner.is_a?(Supermarket)
-      end
-
-      def ensure_supermarket!
-        render json: { error: "Acesso não autorizado" }, status: :unauthorized unless current_supermarket
+        @current_supermarket ||= Supermarket.find_by(id: current_devise_api_user.id)
       end
 
       def post_params
