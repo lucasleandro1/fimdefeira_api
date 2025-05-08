@@ -6,6 +6,7 @@ root to: "api/v1/home#index"
       devise_for :clients
       resources :products
       resources :posts
+      resources :branches
     end
   end
 end

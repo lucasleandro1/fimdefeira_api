@@ -1,15 +1,20 @@
 module Api
   module V1
-    class PostsController < ApplicationController
+    class BranchesController < ApplicationController
       before_action :authenticate_devise_api_token!
       before_action :authenticate_supermarket!
-
 
       def index
         instance_list = BranchManager::List.new.call
         if instance_list[:success]
-          @branches = instance_list[:resources]
-          render json: @branches.as_json
+          @supermarkets = instance_list[:resources]
+          render json: @supermarkets.as_json(
+            include: {
+              branches: {
+                only: [ :address, :telephone ]
+              }
+            }
+          )
         else
           render json: instance_list, status: :unprocessable_entity
         end
@@ -63,7 +68,7 @@ module Api
       end
 
       def branch_params
-        params.require(:post).permit(:address, :telephone)
+        params.require(:branch).permit(:address, :telephone)
       end
     end
   end
