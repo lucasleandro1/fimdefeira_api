@@ -60,10 +60,6 @@ module Api
       def product_params
         params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active)
       end
-
-      def current_supermarket
-        @current_supermarket ||= Supermarket.find_by(id: current_devise_api_user.id)
-      end
     end
   end
 end

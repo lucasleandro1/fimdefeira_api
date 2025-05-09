@@ -3,7 +3,7 @@ module Api
     class PostsController < ApplicationController
       before_action :authenticate_devise_api_token!
       before_action :authorize_access
-      before_action :authenticate_supermarket!, only: [ :create, :update ]
+      before_action :authenticate_supermarket!, only: [ :create, :update, :destroy ]
 
       def index
         instance_list = PostManager::List.new.call
@@ -52,20 +52,22 @@ module Api
         end
       end
 
+      def destroy
+        destroy_service = PostManager::Destroyer.new(params[:id])
+        result = destroy_service.call
+        if result[:success]
+          render json: result[:messages], status: :ok
+        else
+          render json: { error: result[:error_message] }, status: :unprocessable_entity
+        end
+      end
+
       private
 
       def authorize_access
         unless current_supermarket || current_client
           render json: { error: "Não autorizado" }, status: :unauthorized
         end
-      end
-
-      def current_supermarket
-        @current_supermarket ||= current_devise_api_user if current_devise_api_user.is_a?(Supermarket)
-      end
-
-      def current_client
-        @current_client ||= current_devise_api_user if current_devise_api_user.is_a?(Client)
       end
 
       def post_params

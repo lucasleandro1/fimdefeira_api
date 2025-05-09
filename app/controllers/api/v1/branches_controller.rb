@@ -63,10 +63,6 @@ module Api
 
       private
 
-      def current_supermarket
-        @current_supermarket ||= Supermarket.find_by(id: current_devise_api_user.id)
-      end
-
       def branch_params
         params.require(:branch).permit(:address, :telephone)
       end
