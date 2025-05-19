@@ -7,6 +7,6 @@ class TicketItem < ApplicationRecord
   private
 
   def calculate_subtotal_price
-    self.subtotal_price = product.price * quantity
+    self.subtotal_price = post.product.price * quantity
   end
 end

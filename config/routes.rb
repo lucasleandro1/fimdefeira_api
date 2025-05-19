@@ -7,6 +7,7 @@ root to: "api/v1/home#index"
       resources :products
       resources :posts
       resources :branches
+      resources :tickets, only: [ :create, :index, :show ]
     end
   end
 end

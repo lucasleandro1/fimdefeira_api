@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_09_224501) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_19_172753) do
   create_table "branches", force: :cascade do |t|
     t.integer "supermarket_id", null: false
     t.string "address"
@@ -57,6 +57,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_09_224501) do
     t.text "text"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "branch_id", null: false
+    t.index ["branch_id"], name: "index_posts_on_branch_id"
     t.index ["product_id"], name: "index_posts_on_product_id"
     t.index ["supermarket_id"], name: "index_posts_on_supermarket_id"
   end
@@ -107,11 +109,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_09_224501) do
     t.decimal "total_price"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "branch_id"
+    t.datetime "expires_at"
     t.index ["client_id"], name: "index_tickets_on_client_id"
     t.index ["supermarket_id"], name: "index_tickets_on_supermarket_id"
   end
 
   add_foreign_key "branches", "supermarkets"
+  add_foreign_key "posts", "branches"
   add_foreign_key "posts", "products"
   add_foreign_key "posts", "supermarkets"
   add_foreign_key "products", "supermarkets"

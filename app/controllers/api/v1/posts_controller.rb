@@ -36,7 +36,7 @@ module Api
           @post = result[:resources]
           render json: @post.as_json(include:
           { product: { only: [ :name, :description, :expiration_date, :price, :stock_quantity ] },
-           supermarket: { only: [ :email ], include: { branches: { only: [ :address, :telephone ] } } } })
+           supermarket: { only: [ :email ] }, branch: { only: [ :address, :telephone ] } })
         else
           render json: result, status: :unprocessable_entity
         end
@@ -71,7 +71,7 @@ module Api
       end
 
       def post_params
-        params.require(:post).permit(:text, :product_id)
+        params.require(:post).permit(:text, :product_id, :branch_id)
       end
     end
   end

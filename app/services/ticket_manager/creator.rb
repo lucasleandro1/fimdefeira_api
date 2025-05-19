@@ -9,48 +9,46 @@ module TicketManager
     end
 
     def call
-      if ticket_exists?
-        response_error(message: "O ticket já existe para este produto")
-      else
-        ActiveRecord::Base.transaction do
-          ticket = create_ticket
-          create_ticket_items(ticket)
-          response(ticket)
+      ActiveRecord::Base.transaction do
+        tickets = []
+
+        grouped_by_branch = ticket_items_params.group_by do |item|
+          Post.find(item[:post_id]).branch_id
         end
+
+        grouped_by_branch.each do |branch_id, items|
+          supermarket_id = Post.find(items.first[:post_id]).supermarket_id
+
+          ticket = client.tickets.create!(
+            ticket_params.merge(
+              supermarket_id: supermarket_id,
+              branch_id: branch_id,
+              expires_at: 3.hours.from_now
+            )
+          )
+
+          items.each do |item|
+            post = Post.find(item[:post_id])
+            ti = ticket.ticket_items.create!(
+              post: post,
+              quantity: item[:quantity]
+            )
+
+            ti.update(subtotal_price: post.product.price * item[:quantity])
+          end
+
+          ticket.total_price = ticket.ticket_items.sum(&:subtotal_price)
+          ticket.save!
+
+          tickets << ticket
+        end
+
+        { success: true, resources: tickets }
       end
+    rescue ActiveRecord::RecordInvalid => invalid
+      { success: false, error_message: invalid.record.errors.full_messages.to_sentence }
     rescue StandardError => error
-      response_error(error.message)
-    end
-
-    private
-
-    def response(data)
-      { success: true, message: "Ticket criado com sucesso", resource: data }
-    end
-
-    def response_error(error)
-      { success: false, error_message: error }
-    end
-
-    def ticket_exists?
-      # Verifica se já existe um ticket com o mesmo produto e cliente
-      client.tickets.joins(:ticket_items).exists?(ticket_items: { product_id: ticket_params[:product_id] })
-    end
-
-    def create_ticket
-      ticket = client.tickets.new(ticket_params)
-
-      if ticket.save
-        ticket
-      else
-        raise StandardError, ticket.errors.full_messages.to_sentence
-      end
-    end
-
-    def create_ticket_items(ticket)
-      ticket_items = ticket_items_params.map do |item_param|
-        ticket.ticket_items.create!(product_id: item_param[:product_id], quantity: item_param[:quantity])
-      end
+      { success: false, error_message: error.message }
     end
   end
 end
