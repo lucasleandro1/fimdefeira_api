@@ -1,9 +1,9 @@
-module ProductManager
+module BranchManager
   class Finder
-    attr_reader :product_id
+    attr_reader :branch_id
 
-    def initialize(product_id)
-      @product_id = product_id
+    def initialize(branch_id)
+      @branch_id = branch_id
     end
 
     def call
@@ -23,7 +23,7 @@ module ProductManager
     end
 
     def scope
-      Product.find(product_id)
+      Branch.find(branch_id)
     end
   end
 end
