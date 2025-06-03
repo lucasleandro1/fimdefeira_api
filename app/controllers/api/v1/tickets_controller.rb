@@ -8,7 +8,8 @@ module Api
         user = current_client || current_supermarket
         result = TicketManager::List.new(user).call
         if result[:success]
-          render json: result[:resources].as_json(include: {
+        render json: result[:resources].as_json(include: {
+          client: { only: [ :id, :name, :email ] },
           ticket_items: {
             include: {
               post: {
