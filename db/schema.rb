@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_04_133905) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_04_141022) do
   create_table "branches", force: :cascade do |t|
     t.integer "supermarket_id", null: false
     t.string "address"
@@ -112,6 +112,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_04_133905) do
     t.datetime "updated_at", null: false
     t.integer "branch_id"
     t.datetime "expires_at"
+    t.integer "status"
     t.index ["client_id"], name: "index_tickets_on_client_id"
     t.index ["supermarket_id"], name: "index_tickets_on_supermarket_id"
   end

@@ -7,19 +7,21 @@ module Api
       def index
         user = current_client || current_supermarket
         result = TicketManager::List.new(user).call
+
         if result[:success]
-        render json: result[:resources].as_json(include: {
-          client: { only: [ :id, :name, :email ] },
-          ticket_items: {
-            include: {
-              post: {
-                include: {
-                  product: { only: [ :name, :price ] }
+          result[:resources].each { |ticket| ticket.destroy_if_expired }
+          render json: result[:resources].as_json(include: {
+            client: { only: [ :id, :name, :email ] },
+            ticket_items: {
+              include: {
+                post: {
+                  include: {
+                    product: { only: [ :name, :price ] }
+                  }
                 }
               }
             }
-          }
-        }), status: :ok
+          }), status: :ok
         else
           render json: { error: result[:error_message] }, status: :unauthorized
         end
@@ -31,6 +33,7 @@ module Api
 
         if result[:success]
           ticket = result[:resource]
+          ticket.destroy_if_expired
           render json: ticket.as_json(include: {
             ticket_items: {
               include: {
@@ -47,6 +50,7 @@ module Api
         end
       end
 
+
       def create
         service = TicketManager::Creator.new(current_client, ticket_params, ticket_items_params)
         result = service.call
@@ -57,6 +61,24 @@ module Api
         else
           render json: { error: result[:error_message] }, status: :unprocessable_entity
         end
+      end
+
+      def validate
+        user = current_supermarket
+        return render json: { error: "Apenas supermercados podem validar tickets." }, status: :unauthorized unless user
+
+        ticket = Ticket.find(params[:id])
+
+        if ticket.supermarket_id != user.id
+          return render json: { error: "Ticket não pertence ao seu supermercado." }, status: :forbidden
+        end
+
+        if ticket.entregue?
+          return render json: { error: "Ticket já foi validado." }, status: :unprocessable_entity
+        end
+
+        ticket.update!(status: :entregue)
+        render json: { message: "Ticket validado com sucesso.", ticket_id: ticket.id }, status: :ok
       end
 
       private

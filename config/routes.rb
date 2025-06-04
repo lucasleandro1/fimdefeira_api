@@ -12,7 +12,11 @@ root to: "api/v1/home#index"
       resources :products
       resources :posts
       resources :branches
-      resources :tickets, only: [ :create, :index, :show ]
+      resources :tickets, only: [ :create, :index, :show ] do
+        member do
+          patch :validate
+        end
+      end
     end
   end
 end

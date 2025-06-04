@@ -23,7 +23,8 @@ module TicketManager
             ticket_params.merge(
               supermarket_id: supermarket_id,
               branch_id: branch_id,
-              expires_at: 3.hours.from_now
+              expires_at: 3.hours.from_now,
+              status: :pendente
             )
           )
 
@@ -35,19 +36,16 @@ module TicketManager
             )
 
             ti.update(subtotal_price: post.product.price * item[:quantity])
+            post.product.decrement!(:stock_quantity, item[:quantity])
           end
 
-          # Calculando o preço total antes de aplicar o desconto
           total_price = ticket.ticket_items.sum(&:subtotal_price)
 
-          # Aplica o desconto
           discount_percentage = client.current_discount
           discounted_price = total_price * (1 - discount_percentage.to_f / 100)
 
-          # Atualizando o preço total com o desconto aplicado
           ticket.update!(total_price: discounted_price)
 
-          # Incrementando os cupons após o sucesso
           client.increment_cupons! if ticket.save!
 
           tickets << ticket
