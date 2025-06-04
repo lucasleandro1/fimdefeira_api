@@ -8,6 +8,7 @@ root to: "api/v1/home#index"
       devise_for :clients, controllers: {
   registrations: "api/v1/clients/registrations"
 }
+      resources :supermarkets, only: [ :index, :show ]
       resources :products
       resources :posts
       resources :branches
