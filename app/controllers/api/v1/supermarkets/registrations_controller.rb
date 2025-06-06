@@ -15,7 +15,7 @@ module Api
         private
 
         def supermarket_params
-          params.require(:supermarket).permit(:name, :cnpj, :address, :telephone)
+          params.require(:supermarket).permit(:name, :cnpj)
         end
       end
     end
