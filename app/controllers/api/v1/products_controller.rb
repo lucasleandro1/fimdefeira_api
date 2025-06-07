@@ -4,27 +4,33 @@ module Api
       before_action :authenticate_devise_api_token!
       before_action :authenticate_supermarket!
 
-    def index
-      branch = current_supermarket.branches.find_by(id: params[:branch_id])
+      def index
+        branch_id = params[:branch_id]
 
-      if branch.nil?
-        render json: { error: "Branch not found" }, status: :unprocessable_entity
-        return
+        if branch_id.blank?
+          return render json: { error: "branch_id param is required" }, status: :bad_request
+        end
+
+        branch = current_supermarket.branches.find_by(id: branch_id)
+
+        if branch.nil?
+          return render json: { error: "Branch not found or does not belong to this supermarket" }, status: :not_found
+        end
+
+        instance_list = ProductManager::List.new(current_supermarket, branch).call
+
+        if instance_list[:success]
+          @products = instance_list[:resources].compact
+          render json: @products.map { |product| product_with_photo(product) }
+        else
+          render json: instance_list, status: :unprocessable_entity
+        end
       end
-
-      instance_list = ProductManager::List.new(current_supermarket, branch).call
-
-      if instance_list[:success]
-        @products = instance_list[:resources].compact
-        render json: @products.map { |product| product_with_photo(product) }
-      else
-        render json: instance_list, status: :unprocessable_entity
-      end
-    end
 
 
       def create
-        result = ProductManager::Creator.new(current_supermarket, product_params).call
+        branch = current_supermarket.branches.find_by(id: product_params[:branch_id])
+        result = ProductManager::Creator.new(current_supermarket, branch, product_params).call
 
         if result[:success]
           render json: product_with_photo(result[:resource]), status: :created
@@ -34,8 +40,16 @@ module Api
       end
 
       def update
-        update_service = ProductManager::Updater.new(params[:id], product_params, current_supermarket)
+        branch = current_supermarket.branches.find_by(id: product_params[:branch_id])
+
+        if branch.nil?
+          render json: { error: "Branch not found" }, status: :unprocessable_entity
+          return
+        end
+
+        update_service = ProductManager::Updater.new(params[:id], product_params, current_supermarket, branch)
         result = update_service.call
+
         if result[:success]
           render json: result[:message], status: :ok
         else
@@ -44,8 +58,16 @@ module Api
       end
 
       def show
-        instance_finder = ProductManager::Finder.new(params[:id], current_supermarket)
+        branch = current_supermarket.branches.find_by(id: params[:branch_id])
+
+        if branch.nil?
+          render json: { error: "Branch not found" }, status: :unprocessable_entity
+          return
+        end
+
+        instance_finder = ProductManager::Finder.new(params[:id], current_supermarket, branch)
         result = instance_finder.call
+
         if result[:success]
           @product = result[:resources]
           render json: product_with_photo(@product)
@@ -55,8 +77,16 @@ module Api
       end
 
       def destroy
-        destroy_service = ProductManager::Destroyer.new(params[:id], current_supermarket)
+        branch = current_supermarket.branches.find_by(id: params[:branch_id])
+
+        if branch.nil?
+          render json: { error: "Branch not found" }, status: :unprocessable_entity
+          return
+        end
+
+        destroy_service = ProductManager::Destroyer.new(params[:id], current_supermarket, branch)
         result = destroy_service.call
+
         if result[:success]
           render json: result[:messages], status: :ok
         else
@@ -75,7 +105,7 @@ module Api
       end
 
       def product_params
-        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active, :photo)
+        params.require(:product).permit(:name, :description, :expiration_date, :price, :stock_quantity, :active, :photo, :branch_id)
       end
     end
   end

@@ -9,7 +9,7 @@ module BranchManager
 
     def call
       if branch_exists
-        response_error(message: "activerecord.errors.messages.branch_exists")
+        response_error(I18n.t("activerecord.errors.messages.branch_exists"))
       else
         response(create_branch)
       end
@@ -20,7 +20,7 @@ module BranchManager
     private
 
     def response(data)
-      { success: true, message: "activerecord.messages.branch_created", resource: data }
+      { success: true, message: I18n.t("activerecord.messages.branch_created"), resource: data }
     end
 
     def response_error(error)

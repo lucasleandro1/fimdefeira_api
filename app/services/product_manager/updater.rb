@@ -1,11 +1,12 @@
 module ProductManager
   class Updater
-    attr_reader :product_params, :product_id, :supermarket
+    attr_reader :product_params, :product_id, :supermarket, :branch
 
-    def initialize(product_id, product_params, supermarket)
+    def initialize(product_id, product_params, supermarket, branch)
       @product_id = product_id
       @product_params = product_params
       @supermarket = supermarket
+      @branch = branch
     end
 
     def call
@@ -19,7 +20,7 @@ module ProductManager
     private
 
     def response(data)
-      { success: true, message: "activerecord.errors.messages.product_update.", resources: data }
+      { success: true, message: I18n.t("activerecord.errors.messages.product_update"), resources: data }
     end
 
     def response_error(error)
@@ -27,13 +28,14 @@ module ProductManager
     end
 
     def scope
-      @product = supermarket.products.find_by(id: product_id)
+      @product = supermarket.products.find_by(id: product_id, branch: @branch)
       if @product.nil?
-        raise ActiveRecord::RecordNotFound, "Product not found for this supermarket"
+        raise ActiveRecord::RecordNotFound, "Product not found for this supermarket and branch"
       end
       unless @product.update(product_params)
         raise StandardError.new(@product.errors.full_messages.to_sentence)
       end
+      @product
     end
   end
 end
