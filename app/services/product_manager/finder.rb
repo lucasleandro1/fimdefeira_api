@@ -1,9 +1,10 @@
 module ProductManager
   class Finder
-    attr_reader :product_id
+    attr_reader :product_id, :supermarket
 
-    def initialize(product_id)
+    def initialize(product_id, supermarket)
       @product_id = product_id
+      @supermarket = supermarket
     end
 
     def call
@@ -23,7 +24,7 @@ module ProductManager
     end
 
     def scope
-      Product.find(product_id)
+      supermarket.products.find_by(id: product_id)
     end
   end
 end

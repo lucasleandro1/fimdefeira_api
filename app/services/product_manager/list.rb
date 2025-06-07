@@ -1,5 +1,12 @@
 module ProductManager
   class List
+    attr_reader :supermarket, :branch
+
+    def initialize(supermarket, branch)
+      @supermarket = supermarket
+      @branch = branch
+    end
+
     def call
       response(scope)
     rescue StandardError => error
@@ -17,7 +24,7 @@ module ProductManager
     end
 
     def scope
-      Product.all
+      @supermarket.products.where(branch: @branch)
     end
   end
 end

@@ -1,10 +1,11 @@
 module ProductManager
   class Updater
-    attr_reader :product_params, :product_id
+    attr_reader :product_params, :product_id, :supermarket
 
-    def initialize(product_id, product_params)
+    def initialize(product_id, product_params, supermarket)
       @product_id = product_id
       @product_params = product_params
+      @supermarket = supermarket
     end
 
     def call
@@ -26,9 +27,12 @@ module ProductManager
     end
 
     def scope
-      @product = Product.find(product_id)
+      @product = supermarket.products.find_by(id: product_id)
+      if @product.nil?
+        raise ActiveRecord::RecordNotFound, "Product not found for this supermarket"
+      end
       unless @product.update(product_params)
-        raise StandardError.new(product.errors.full_messages.to_sentence)
+        raise StandardError.new(@product.errors.full_messages.to_sentence)
       end
     end
   end
