@@ -31,19 +31,13 @@ module Api
         branch = current_supermarket.branches.find_by(id: product_params[:branch_id])
         return render json: { error: "Branch not found" }, status: :not_found if branch.nil?
 
-        # 1. Chama o seu criador de produtos como antes
         result = ProductManager::Creator.new(current_supermarket, branch, product_params).call
 
         if result[:success]
-          # 2. Pega o produto recém-criado
           product = result[:resource]
-
-          # 3. VERIFICA se o produto tem uma foto e CHAMA a análise da IA
           if product.photo.attached?
             analyze_and_update_with_gemini(product)
           end
-
-          # 4. Renderiza o produto (que pode ter sido atualizado pela IA)
           render json: product_with_photo(product), status: :created
         else
           render json: { error: result[:error_message] }, status: :unprocessable_entity
