@@ -13,6 +13,7 @@ root to: "api/v1/home#index"
       resources :products
       resources :posts
       resources :branches
+      post "gemini/generate_content", to: "gemini#generate_content"
       resources :tickets, only: [ :create, :index, :show ] do
         member do
           patch :validate

@@ -27,13 +27,24 @@ module Api
         end
       end
 
-
       def create
         branch = current_supermarket.branches.find_by(id: product_params[:branch_id])
+        return render json: { error: "Branch not found" }, status: :not_found if branch.nil?
+
+        # 1. Chama o seu criador de produtos como antes
         result = ProductManager::Creator.new(current_supermarket, branch, product_params).call
 
         if result[:success]
-          render json: product_with_photo(result[:resource]), status: :created
+          # 2. Pega o produto recém-criado
+          product = result[:resource]
+
+          # 3. VERIFICA se o produto tem uma foto e CHAMA a análise da IA
+          if product.photo.attached?
+            analyze_and_update_with_gemini(product)
+          end
+
+          # 4. Renderiza o produto (que pode ter sido atualizado pela IA)
+          render json: product_with_photo(product), status: :created
         else
           render json: { error: result[:error_message] }, status: :unprocessable_entity
         end
@@ -95,6 +106,21 @@ module Api
       end
 
       private
+
+      def analyze_and_update_with_gemini(product)
+        service = GeminiService.new(product.photo)
+        gemini_data = service.extract_product_data
+
+        Rails.logger.info "Gemini Data: #{gemini_data.inspect}"
+
+        if gemini_data
+          product.update(gemini_data)
+        else
+          Rails.logger.warn "=> Análise da Gemini para o produto ##{product.id} falhou ou não retornou dados."
+        end
+      rescue => e
+        Rails.logger.error "=> ERRO INESPERADO durante a análise da Gemini para o produto ##{product.id}: #{e.message}"
+      end
 
       def product_with_photo(product)
         return {} if product.nil?
