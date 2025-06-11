@@ -63,7 +63,7 @@ module Api
           end
           render json: @post.as_json(
             include: {
-              product: { only: [ :name, :description, :expiration_date, :price, :stock_quantity ] },
+              product: { only: [ :name, :description, :expiration_date, :price, :stock_quantity ], methods: [ :photo_url ] },
               supermarket: { only: [ :email ] },
               branch: { only: [ :address, :telephone ] }
             }
