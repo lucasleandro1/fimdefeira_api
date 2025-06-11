@@ -49,18 +49,18 @@ class GeminiService
   end
 
   def start_resumable_upload
-    blob = @image_file.blob
+    file_size = File.size(@image_file.tempfile.path)
 
     url = "https://generativelanguage.googleapis.com/upload/v1beta/files?key=#{@api_key}"
     headers = {
       "X-Goog-Upload-Protocol" => "resumable",
       "X-Goog-Upload-Command" => "start",
-      "X-Goog-Upload-Header-Content-Length" => blob.byte_size.to_s,
+      "X-Goog-Upload-Header-Content-Length" => file_size.to_s,
       "X-Goog-Upload-Header-Content-Type" => @image_file.content_type,
       "Content-Type" => "application/json"
     }
     body = {
-      file: { display_name: @image_file.filename.to_s }
+      file: { display_name: @image_file.original_filename }
     }
 
     response = self.class.post(url, headers: headers, body: body.to_json)
@@ -74,8 +74,9 @@ class GeminiService
   end
 
 
+
   def upload_file(upload_url)
-    file_content = @image_file.download
+    file_content = @image_file.read
 
     headers = {
       "Content-Type" => @image_file.content_type,
@@ -92,6 +93,7 @@ class GeminiService
       nil
     end
   end
+
 
 
   def call_generate_content(file_uri)

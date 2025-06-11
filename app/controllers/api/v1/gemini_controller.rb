@@ -4,20 +4,18 @@ module Api
       before_action :authenticate_devise_api_token!
       before_action :authenticate_supermarket!
 
+
       def generate_content
         image_file = params.require(:image)
 
         service = GeminiService.new(image_file)
-        result = service.extract_product_data
+        gemini_data = service.extract_product_data
 
-        if result.nil?
-          render json: { error: "Não foi possível extrair os dados da imagem" }, status: :unprocessable_entity
+        if gemini_data
+          render json: gemini_data, status: :ok
         else
-          render json: result, status: :ok
+          render json: { error: "Falha na análise da imagem" }, status: :unprocessable_entity
         end
-      rescue => e
-        Rails.logger.error "[GeminiController] Erro: #{e.message}"
-        render json: { error: "Erro interno no servidor: #{e.message}" }, status: :internal_server_error
       end
     end
   end

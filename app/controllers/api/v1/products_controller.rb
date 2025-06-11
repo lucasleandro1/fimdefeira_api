@@ -35,9 +35,6 @@ module Api
 
         if result[:success]
           product = result[:resource]
-          if product.photo.attached?
-            analyze_and_update_with_gemini(product)
-          end
           render json: product_with_photo(product), status: :created
         else
           render json: { error: result[:error_message] }, status: :unprocessable_entity
@@ -107,11 +104,6 @@ module Api
 
         Rails.logger.info "Gemini Data: #{gemini_data.inspect}"
 
-        if gemini_data
-          product.update(gemini_data)
-        else
-          Rails.logger.warn "=> Análise da Gemini para o produto ##{product.id} falhou ou não retornou dados."
-        end
       rescue => e
         Rails.logger.error "=> ERRO INESPERADO durante a análise da Gemini para o produto ##{product.id}: #{e.message}"
       end
