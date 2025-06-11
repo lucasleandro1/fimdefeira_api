@@ -5,37 +5,30 @@ module Api
       before_action :authorize_access
       before_action :authenticate_supermarket!, only: [ :create, :update, :destroy ]
 
-def index
-  user = current_client || current_supermarket
-  result = TicketManager::List.new(user).call
+      def index
+        branch_id = params[:branch_id]
 
-  if result[:success]
-    tickets = result[:resources]
+        if current_supermarket.present? && branch_id.blank?
+          render json: { error_message: "branch_id é obrigatório para supermercados" }, status: :unprocessable_entity
+          return
+        end
 
-    tickets.each do |ticket|
-      # Garanta que o branch foi carregado corretamente
-      if ticket.branch.present? && ticket.expired?
-        ticket.destroy_if_expired
-      end
-    end
+        current_actor = current_supermarket || current_client
+        instance_list = PostManager::List.new(current_actor, branch_id).call
 
-    render json: tickets.as_json(include: {
-      client: { only: [ :id, :name, :email ] },
-      ticket_items: {
-        include: {
-          post: {
+        if instance_list[:success]
+          @posts = instance_list[:resources]
+          render json: @posts.as_json(
             include: {
-              product: { only: [ :name, :price ] }
+              product: { only: [ :name, :expiration_date, :price, :stock_quantity ], methods: [ :photo_url ] },
+              supermarket: { only: [ :email ] },
+              branch: { only: [ :address, :telephone ] }
             }
-          }
-        }
-      }
-    }), status: :ok
-  else
-    render json: { error: result[:error_message] }, status: :unauthorized
-  end
-end
-
+          )
+        else
+          render json: instance_list, status: :unprocessable_entity
+        end
+      end
 
       def create
         result = PostManager::Creator.new(current_supermarket, post_params).call
