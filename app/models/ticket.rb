@@ -1,6 +1,6 @@
 class Ticket < ApplicationRecord
   belongs_to :client
-  belongs_to :branch
+  belongs_to :branch, optional: true
   has_many :ticket_items, dependent: :destroy
 
   delegate :supermarket, to: :branch

@@ -5,16 +5,12 @@ module Api
       before_action :authenticate_supermarket!
 
       def index
-        instance_list = BranchManager::List.new.call
+        instance_list = BranchManager::List.new(current_supermarket, params[:branch]).call
+
         if instance_list[:success]
-          @supermarkets = instance_list[:resources]
-          render json: @supermarkets.as_json(
-            include: {
-              branches: {
-                only: [ :address, :telephone ]
-              }
-            }
-          )
+          @branches = instance_list[:resources]
+
+          render json: @branches.as_json
         else
           render json: instance_list, status: :unprocessable_entity
         end
@@ -31,7 +27,7 @@ module Api
       end
 
       def update
-        update_service = BranchManager::Updater.new(params[:id], branch_params)
+        update_service = BranchManager::Updater.new(params[:id], branch_params, current_supermarket)
         result = update_service.call
         if result[:success]
           render json: result[:message], status: :ok
@@ -41,7 +37,7 @@ module Api
       end
 
       def show
-        instance_finder = BranchManager::Finder.new(params[:id])
+        instance_finder = BranchManager::Finder.new(current_supermarket, params[:id])
         result = instance_finder.call
         if result[:success]
           @branches = result[:resources]
@@ -52,7 +48,7 @@ module Api
       end
 
       def destroy
-        destroy_service = BranchManager::Destroyer.new(params[:id])
+        destroy_service = BranchManager::Destroyer.new(current_supermarket, params[:id])
         result = destroy_service.call
         if result[:success]
           render json: result[:messages], status: :ok

@@ -8,8 +8,10 @@ module PostManager
     end
 
     def call
+      return response_error("Produto ou filial não encontrados") unless valid_product_and_branch?
+
       if post_exists
-        response_error(message: "activerecord.errors.messages.post_exists")
+        response_error("activerecord.errors.messages.post_exists")
       else
         response(create_post)
       end
@@ -29,6 +31,11 @@ module PostManager
 
     def post_exists
       supermarket.posts.exists?(product_id: post_params[:product_id])
+    end
+
+    def valid_product_and_branch?
+      supermarket.products.exists?(id: post_params[:product_id]) &&
+        supermarket.branches.exists?(id: post_params[:branch_id])
     end
 
     def create_post

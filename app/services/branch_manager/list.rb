@@ -1,5 +1,12 @@
 module BranchManager
   class List
+    attr_reader :supermarket, :branch
+
+    def initialize(supermarket, branch)
+      @supermarket = supermarket
+      @branches = branch
+    end
+
     def call
       response(scope)
     rescue StandardError => error
@@ -17,7 +24,7 @@ module BranchManager
     end
 
     def scope
-      Supermarket.all
+      @supermarket.branches
     end
   end
 end

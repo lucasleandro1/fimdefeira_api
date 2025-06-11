@@ -1,8 +1,9 @@
 module BranchManager
   class Destroyer
-    attr_reader :branch_id
+    attr_reader :supermarket, :branch_id
 
-    def initialize(branch_id)
+    def initialize(supermarket, branch_id)
+      @supermarket = supermarket
       @branch_id = branch_id
     end
 
@@ -23,7 +24,7 @@ module BranchManager
     end
 
     def scope
-      @branch = Branch.find(branch_id)
+      @branch = supermarket.branches.find(branch_id)
       unless @branch.destroy
         raise StandardError.new(@branch.errors.full_messages.to_sentence)
       end

@@ -9,7 +9,6 @@ module Api
         result = TicketManager::List.new(user).call
 
         if result[:success]
-          result[:resources].each { |ticket| ticket.destroy_if_expired }
           render json: result[:resources].as_json(include: {
             client: { only: [ :id, :name, :email ] },
             ticket_items: {

@@ -1,5 +1,5 @@
 class Post < ApplicationRecord
-  belongs_to :supermarket
-  has_many :products
+  belongs_to :product
   belongs_to :branch
+  belongs_to :supermarket
 end

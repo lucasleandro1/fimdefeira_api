@@ -1,8 +1,9 @@
 module BranchManager
   class Finder
-    attr_reader :branch_id
+    attr_reader :supermarket, :branch_id
 
-    def initialize(branch_id)
+    def initialize(supermarket, branch_id)
+      @supermarket = supermarket
       @branch_id = branch_id
     end
 
@@ -23,7 +24,7 @@ module BranchManager
     end
 
     def scope
-      Branch.find(branch_id)
+      @supermarket.branches.find(branch_id)
     end
   end
 end

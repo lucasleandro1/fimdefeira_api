@@ -5,19 +5,37 @@ module Api
       before_action :authorize_access
       before_action :authenticate_supermarket!, only: [ :create, :update, :destroy ]
 
-      def index
-        instance_list = PostManager::List.new.call
-        if instance_list[:success]
-          @posts = instance_list[:resources]
-          render json: @posts.as_json(include:
-          { product: { only: [ :name, :expiration_date, :price, :stock_quantity ] },
-          supermarket: {
-            only: [ :email ]
-          } })
-        else
-          render json: instance_list, status: :unprocessable_entity
-        end
+def index
+  user = current_client || current_supermarket
+  result = TicketManager::List.new(user).call
+
+  if result[:success]
+    tickets = result[:resources]
+
+    tickets.each do |ticket|
+      # Garanta que o branch foi carregado corretamente
+      if ticket.branch.present? && ticket.expired?
+        ticket.destroy_if_expired
       end
+    end
+
+    render json: tickets.as_json(include: {
+      client: { only: [ :id, :name, :email ] },
+      ticket_items: {
+        include: {
+          post: {
+            include: {
+              product: { only: [ :name, :price ] }
+            }
+          }
+        }
+      }
+    }), status: :ok
+  else
+    render json: { error: result[:error_message] }, status: :unauthorized
+  end
+end
+
 
       def create
         result = PostManager::Creator.new(current_supermarket, post_params).call
@@ -30,15 +48,35 @@ module Api
       end
 
       def show
-        instance_finder = PostManager::Finder.new(params[:id])
-        result = instance_finder.call
-        if result[:success]
-          @post = result[:resources]
-          render json: @post.as_json(include:
-          { product: { only: [ :name, :description, :expiration_date, :price, :stock_quantity ] },
-           supermarket: { only: [ :email ] }, branch: { only: [ :address, :telephone ] } })
+        branch_id = params[:branch_id]
+
+        if current_supermarket.present? && branch_id.blank?
+          render json: { error_message: "branch_id é obrigatório para supermercados" }, status: :unprocessable_entity
+          return
+        end
+
+        current_user = current_supermarket || current_client
+        instance_finder = PostManager::Finder.new(params[:id], current_user, branch_id).call
+
+        if instance_finder[:success]
+          @post = instance_finder[:resources]
+
+          if current_user.is_a?(Supermarket)
+            branch = current_supermarket.branches.find_by(id: branch_id)
+
+            if branch.nil? || @post.nil? || @post.branch_id != branch.id
+              return render json: { error: "Unauthorized" }, status: :forbidden
+            end
+          end
+          render json: @post.as_json(
+            include: {
+              product: { only: [ :name, :description, :expiration_date, :price, :stock_quantity ] },
+              supermarket: { only: [ :email ] },
+              branch: { only: [ :address, :telephone ] }
+            }
+          )
         else
-          render json: result, status: :unprocessable_entity
+          render json: instance_finder, status: :unprocessable_entity
         end
       end
 
@@ -63,6 +101,10 @@ module Api
       end
 
       private
+
+      def current_user
+        current_supermarket || current_client
+      end
 
       def authorize_access
         unless current_supermarket || current_client

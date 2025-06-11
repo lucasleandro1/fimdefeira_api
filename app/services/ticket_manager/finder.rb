@@ -1,5 +1,7 @@
 module TicketManager
   class Finder
+    attr_reader :user, :ticket_id
+
     def initialize(user, ticket_id)
       @user = user
       @ticket_id = ticket_id
