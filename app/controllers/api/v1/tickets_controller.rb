@@ -15,7 +15,7 @@ module Api
               include: {
                 post: {
                   include: {
-                    product: { only: [ :name, :price ] }
+                    product: { only: [ :name, :price ], methods: [ :photo_url ] }
                   }
                 }
               }
@@ -38,7 +38,7 @@ module Api
               include: {
                 post: {
                   include: {
-                    product: { only: [ :name, :price ] }
+                    product: { only: [ :name, :price ], methods: [ :photo_url ] }
                   }
                 }
               }
